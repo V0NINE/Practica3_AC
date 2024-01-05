@@ -12,6 +12,7 @@ int valors2[NN+1];
 typedef struct {
     int *val;
     int ne;
+    int pid;
 }qs_args;
 
 void *qs(void *arg)
@@ -24,6 +25,8 @@ void *qs(void *arg)
     i = 1;
     f = args->ne-1;
     vtmp = args->val[i];
+
+    printf("Hola qs, visita del thread %d, el meu primer element es: %d\n", args->pid, args->val[0]);
 
     while (i <= f)
     {
@@ -93,13 +96,18 @@ int main(int nargs,char* args[])
     if (ndades % parts) assert("N ha de ser divisible per parts" == 0);
 
     for(i=0;i<ndades;i++) valors[i]=rand()%MAX_INT;
+	
+    for(i=0;i<ndades;i++)
+	printf("%d\n", valors[i]);
 
     for(i = 0; i < parts; i++)
     {
         args_qs[i].val = &valors[i*(ndades/parts)];     // primera direcció de memòria del vector per cada thread
-        args_qs[i].ne = ndades/parts;                  // nombre d'elements que ha de tractar cada thread
+        args_qs[i].ne = ndades/parts;			// nombre d'elements que ha de tractar cada thread
+	args_qs[i].pid = i;
+	printf("thread %d primer valor: %d\n", args_qs[i].pid, args_qs[i].val[0]);
 
-        pthread_create(&threads[i], NULL, qs, (void *)&args[i]);
+        pthread_create(&threads[i], NULL, qs, (void *)&args_qs[i]);
     }
 
     // quicksort original, per fer PROVES
@@ -115,7 +123,7 @@ int main(int nargs,char* args[])
     // Merge de dos vectors. 1 de cada 2 threads uneix els dos vectors
     // A cada volta nomes treballen la meitat dels threads fins arribar
     // al thread principal
-    vin = valors;
+    /*vin = valors;
     vout = valors2;
     for (m = 2*(ndades/parts); m <= ndades; m *= 2)
     {
@@ -125,7 +133,7 @@ int main(int nargs,char* args[])
         vtmp=vin;
         vin=vout;
         vout=vtmp;
-    }
+    }*/
 
     /* EXEMPLE ASSIGNACIO FEINA a 4 THREADS
     qs(&valors[0],ndades/4); //per a TH0
@@ -141,10 +149,10 @@ int main(int nargs,char* args[])
     merge2(valors2,N,valors); //per a TH0
     vin=valors;
     */
-    for (i=1;i<ndades;i++) assert(vin[i-1]<=vin[i]); // comprova que la llista estigui ordenada
+    /*for (i=1;i<ndades;i++) assert(vin[i-1]<=vin[i]); // comprova que la llista estigui ordenada
 
     for (i=0;i<ndades;i+=100)
         sum += vin[i];
     
-    printf("validacio %lld \n",sum);
+    printf("validacio %lld \n",sum);*/
 }
