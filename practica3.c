@@ -63,7 +63,8 @@ int main(int nargs, char *args[])
     // 0 2 4 6
 
     // 0 4      
-
+    vin = valors;
+    vout = valors2;
     for (i = 1; i < parts/2; i *= 2)
     {
         for (int n = 0; n < parts; n++)
@@ -81,6 +82,10 @@ int main(int nargs, char *args[])
             margs[j].vo = &valors2[j * (ndades / parts)];
             pthread_create(&threads[j], NULL, merge_aux, (void *)&margs[j]);   
         }
+
+        vtmp = vin;
+        vin = vout;
+        vout = vtmp;
     }
 
     for (int n = 0; n < parts; n += parts/2)
