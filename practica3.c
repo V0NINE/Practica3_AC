@@ -69,13 +69,6 @@ void *qs(void *arg)
         args_qs.ne = args->ne-f-1;
         qs(&args_qs);
     }
-
-    if(args->tid % 2 == 0 && args->tid + 1 < parts)
-        pthread_join(threads[args->tid + 1], NULL);
-    
-    if (args->tid % 2 == 1) 
-        pthread_exit(NULL);
-
 }
 
 void merge2(void *arg)
