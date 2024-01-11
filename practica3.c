@@ -23,7 +23,7 @@ typedef struct {
     int *vout;
     int tid;
 }join_args;
-
+printf("branca main");
 void join(qs_args *args)
 {	
     if (args->tid % 2 == 0 && args->tid + 1 < parts)
