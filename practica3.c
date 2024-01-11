@@ -22,26 +22,7 @@ typedef struct {
     int n;
     int *vout;
     int tid;
-}join_args;
-printf("rama de prova")
-void join(qs_args *args)
-{	
-    if (args->tid % 2 == 0 && args->tid + 1 < parts)
-    {	
-    	 pthread_join(threads[args->tid + 1], NULL);
-	 parts--;
-
-	 pthread_create(&threads[args->tid], merge2, &valors[args->tid*(ndades/parts)], 2*ndades/parts, &valors2[args->tid*(ndades/parts)],NULL); 
-    }
-
-
-    if (args->tid % 2 == 1) 
-	    pthread_exit(NULL);
-
-	    
-}
-
-
+}merge_args;
 
 void *qs(void *arg)
 {
@@ -89,11 +70,15 @@ void *qs(void *arg)
         qs(&args_qs);
     }
 
-    join(args);
- 
+    if(args->tid % 2 == 0 && args->tid + 1 < parts)
+        pthread_join(threads[args->tid + 1], NULL);
+    
+    if (args->tid % 2 == 1) 
+        pthread_exit(NULL);
+
 }
 
-void merge2(join_args *args)
+void merge2(void *arg)
 {
     int vtmp;
     int i,j,posi,posj;
@@ -105,7 +90,6 @@ void merge2(join_args *args)
             vo[i] = val[posi++];
         else if (posj < n)
             vo[i] = val[posj++];
-    join(args);
 }
 
 int main(int nargs,char* args[])
@@ -140,11 +124,15 @@ int main(int nargs,char* args[])
 	    //printf("thread %d primer valor: %d\n", args_qs[i].tid, args_qs[i].val[0]);
         pthread_create(&threads[i], NULL, qs, (void *)&args_qs[i]);
     }
-    
+
+    for(i=0; i<parts; i++)
+    {
+        pthread_join(threads[i],NULL);
+    }
+
     // Sincronització i merge dos a dos
     for (int step = 1; step < parts; step *= 2) 
     {
-
         for (i = 0; i < parts; i += 2 * step) 
         {
             if (i + step < parts) 
