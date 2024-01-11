@@ -23,22 +23,24 @@ typedef struct {
     int *vout;
     int tid;
 }join_args;
-printf("branca main");
+
 void join(qs_args *args)
 {	
+    join_args jargs;
     if (args->tid % 2 == 0 && args->tid + 1 < parts)
     {	
     	 pthread_join(threads[args->tid + 1], NULL);
 	 parts--;
-
-	 pthread_create(&threads[args->tid], merge2, &valors[args->tid*(ndades/parts)], 2*ndades/parts, &valors2[args->tid*(ndades/parts)],NULL); 
+	 jargs.vin=valors;
+	 jargs.vout=valors2;
+	 jargs.n=2*(ndades/parts);
+	 jargs.tid=args->tid;
+	 pthread_create(&threads[args->tid],NULL,merge2,jargs); 
     }
-
 
     if (args->tid % 2 == 1) 
 	    pthread_exit(NULL);
 
-	    
 }
 
 
@@ -93,7 +95,7 @@ void *qs(void *arg)
  
 }
 
-void merge2(int* val, int n,int *vo)
+void merge2(join_args jargs)
 {
     int vtmp;
     int i,j,posi,posj;
@@ -136,8 +138,8 @@ int main(int nargs,char* args[])
     {
         args_qs[i].val = &valors[i*(ndades/parts)];     // primera direcció de memòria del vector per cada thread
         args_qs[i].ne = ndades/parts;			// nombre d'elements que ha de tractar cada thread
-	    args_qs[i].tid = i;
-	    //printf("thread %d primer valor: %d\n", args_qs[i].tid, args_qs[i].val[0]);
+	args_qs[i].tid = i;
+	//printf("thread %d primer valor: %d\n", args_qs[i].tid, args_qs[i].val[0]);
         pthread_create(&threads[i], NULL, qs, (void *)&args_qs[i]);
     }
     
