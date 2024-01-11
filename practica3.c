@@ -23,7 +23,7 @@ typedef struct {
     int *vout;
     int tid;
 }join_args;
-
+printf("rama de prova")
 void join(qs_args *args)
 {	
     if (args->tid % 2 == 0 && args->tid + 1 < parts)
@@ -93,7 +93,7 @@ void *qs(void *arg)
  
 }
 
-void merge2(int* val, int n,int *vo)
+void merge2(join_args *args)
 {
     int vtmp;
     int i,j,posi,posj;
@@ -105,7 +105,7 @@ void merge2(int* val, int n,int *vo)
             vo[i] = val[posi++];
         else if (posj < n)
             vo[i] = val[posj++];
-    join();
+    join(args);
 }
 
 int main(int nargs,char* args[])
