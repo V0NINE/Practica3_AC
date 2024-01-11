@@ -8,12 +8,40 @@
 
 int valors[NN+1];
 int valors2[NN+1];
+pthread_t threads[parts];
+int ndades, parts;
 
 typedef struct {
     int *val;
     int ne;
-    int pid;
+    int tid;
 }qs_args;
+
+typedef struct {
+    int *vin;
+    int n;
+    int *vout;
+    int tid;
+}join_args;
+
+void join(qs_args *args)
+{	
+    if (args->tid % 2 == 0 && args->tid + 1 < parts)
+    {	
+    	 pthread_join(threads[args->tid + 1], NULL);
+	 parts--;
+
+	 pthread_create(&threads[args->tid], merge2, &valors[args->tid*(ndades/parts)], 2*ndades/parts, &valors2[args->tid*(ndades/parts)],NULL); 
+    }
+
+
+    if (args->tid % 2 == 1) 
+	    pthread_exit(NULL);
+
+	    
+}
+
+
 
 void *qs(void *arg)
 {
@@ -26,7 +54,7 @@ void *qs(void *arg)
     f = args->ne-1;
     vtmp = args->val[i];
 
-    //printf("Hola qs, visita del thread %d, el meu primer element es: %d\n", args->pid, args->val[0]);
+    //printf("Hola qs, visita del thread %d, el meu primer element es: %d\n", args->tid, args->val[0]);
 
     while (i <= f)
     {
@@ -60,6 +88,9 @@ void *qs(void *arg)
         args_qs.ne = args->ne-f-1;
         qs(&args_qs);
     }
+
+    join(args);
+ 
 }
 
 void merge2(int* val, int n,int *vo)
@@ -74,11 +105,12 @@ void merge2(int* val, int n,int *vo)
             vo[i] = val[posi++];
         else if (posj < n)
             vo[i] = val[posj++];
+    join();
 }
 
 int main(int nargs,char* args[])
 {
-    int ndades,i,m,parts, t;
+    int i,m,t;
     int *vin,*vout,*vtmp;
     long long sum=0;
 
@@ -89,7 +121,6 @@ int main(int nargs,char* args[])
 
     parts = atoi(args[2]);
 
-    pthread_t threads[parts];
     qs_args args_qs[parts];
     
     if (parts < 2) assert("Han d'haver dues parts com a minim" == 0);
@@ -105,11 +136,10 @@ int main(int nargs,char* args[])
     {
         args_qs[i].val = &valors[i*(ndades/parts)];     // primera direcció de memòria del vector per cada thread
         args_qs[i].ne = ndades/parts;			// nombre d'elements que ha de tractar cada thread
-	    args_qs[i].pid = i;
-	    //printf("thread %d primer valor: %d\n", args_qs[i].pid, args_qs[i].val[0]);
+	    args_qs[i].tid = i;
+	    //printf("thread %d primer valor: %d\n", args_qs[i].tid, args_qs[i].val[0]);
         pthread_create(&threads[i], NULL, qs, (void *)&args_qs[i]);
     }
-
     
     // Sincronització i merge dos a dos
     for (int step = 1; step < parts; step *= 2) 
@@ -120,7 +150,8 @@ int main(int nargs,char* args[])
             if (i + step < parts) 
             {
                 // Fusiona les dos parts: [i, i+step)
-                merge2(&valors[i * ndades/parts], 2 * ndades/parts, &valors2[i * ndades/parts]);
+                pthread_join(threads[i + step], NULL);
+		merge2(&valors[i * ndades/parts], 2 * ndades/parts, &valors2[i * ndades/parts]);
             }
         }
 
@@ -128,16 +159,8 @@ int main(int nargs,char* args[])
         vtmp = vin;
         vin = vout;
         vout = vtmp;
-
-        // Redueix la quantitat de threads actius a la meitat
-        for (int j = 0; j < parts; j += 2 * step) 
-        {
-            if (j + step < parts) 
-            {
-                pthread_join(threads[j + step], NULL);
-            }
-        }
     }
+
     merge2(valors2,ndades,valors); //per a TH0
     vin=valors;
     
