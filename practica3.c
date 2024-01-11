@@ -27,9 +27,9 @@ void merge2(int *val, int n, int *vo);
 void *qs_aux(void *args);
 void *merge_aux(void *args);
 
-int main(int nargs, char *args[])
+void main(int nargs, char *args[])
 {
-    int ndades, i, m, parts;
+    int ndades, i, m, parts, j, n;
     int *vin, *vout, *vtmp;
     long long sum = 0;
 
@@ -58,29 +58,31 @@ int main(int nargs, char *args[])
         pthread_create(&threads[i], NULL, qs_aux, (void *)&qargs[i]);        
     }
 
-    // 0 1 2 3 4 5 6 7 8
-
+    // 0 1 2 3 4 5 6 7
     // 0 2 4 6
-
-    // 0 4      
+    // 0 4  
+    // 0
+    j = parts;
     vin = valors;
     vout = valors2;
-    for (i = 1; i < parts/2; i *= 2)
+    for (i = 1; i <= parts/2; i *= 2)
     {
-        for (int n = 0; n < parts; n++)
+        for (n = 0; n < j; n++)
             pthread_join(threads[n], NULL);
 
-        for (int j = 0; j < parts; j += 2 * i)
+        j = 0;    
+        for (n = 0; n < parts; n += 2 * i)
         {
-            margs[j].val = &valors[j * (ndades / parts)];
+            margs[j].val = &vin[n * (ndades / parts)];
 
             if (i == 1)
                 margs[j].n = 2 * (ndades / parts);
             else
                 margs[j].n = 2 * i * (ndades / parts);
 
-            margs[j].vo = &valors2[j * (ndades / parts)];
-            pthread_create(&threads[j], NULL, merge_aux, (void *)&margs[j]);   
+            margs[j].vo = &vout[n * (ndades / parts)];
+            pthread_create(&threads[j], NULL, merge_aux, (void *)&margs[j]); 
+            j++;  
         }
 
         vtmp = vin;
@@ -88,15 +90,15 @@ int main(int nargs, char *args[])
         vout = vtmp;
     }
 
-    for (int n = 0; n < parts; n += parts/2)
+    for (n = 0; n < j; n++)
         pthread_join(threads[n], NULL);
 
     // printf("---VALORS ORDENATS ABANS DEL MERGE---\n");
     // for (i = 0; i < ndades; i++)
     //     printf("%d\n", valors[i]);
 
-    merge2(valors2,ndades,valors); //per a TH0
-    vin=valors;
+    // merge2(valors2,ndades,valors); //per a TH0
+    // vin=valors;
 
     //printf("---VALORS ORDENATS---\n");
     //for (i = 0; i < ndades; i++)
